@@ -9,6 +9,8 @@ import FuncionesCodigos as fc
 class Codigo:
     clase = 2 #mod 2
 
+    nombre = ''
+
     # [n,k,d]
     longitud = 0
     dimension = 0
@@ -42,125 +44,135 @@ class Codigo:
     # 1. Ecuaciones parametricas
     # 2. Matriz generadora
     # 3. Matriz de control
-    def __init__(self, clase, parametricas=[], generadora=[]):
+    def __init__(self, clase, parametricas=[], generadora=[], nombre='Sin nombre'):
         self.clase = clase
+        self.nombre = nombre
 
         if len(parametricas) != 0: #si hay ecuaciones parametricas
-            #self.dimension = obtenerDimensionParametricas(parametricas)
-            #self.longitud = obtenerLongitudParametricas(parametricas)
             arrayParametricas = np.array(AlgebraLineal.obtenerParametricas(parametricas,self.clase))
             self.matrizGeneradora = np.bmat(arrayParametricas)
-            self.longitud = self.matrizGeneradora.shape[1] #el numero de columnas es la longitud
-            self.dimension = np.linalg.matrix_rank(self.matrizGeneradora) #coincide con el numero filas
-            self.calcularTodasPalabras()
-            self.distanciaMinimaHamming()
-            self.tasaInformacion()
-            self.distanciaRelativa()
-            self.capacidadDeteccion()
-            self.capacidadCorreccion()
-            self.numeroPalabras()
-            self.cotaSingleton()
-            self.matrizGeneradora = AlgebraLineal.diagonalizacionManual(self.matrizGeneradora, self.dimension, self.clase)
-            self.calcularMatrizControl()
+            self.setLongitud()
+            self.setDimension()
+            self.diagonalizacionManualGeneradora()
+
+            self.setDiccionario()
+            self.setDistanciaMinimaHamming()
+            self.setTasaInformacion()
+            self.setDistanciaRelativa()
+            self.setCapacidadDeteccion()
+            self.setCapacidadCorreccion()
+            self.setNumeroPalabras()
+            self.setCotaSingleton()
+            self.setMatrizControl()
+
+            self.calcularTablaSindromes()
+            #self.decodificacionSindromes([0,1,1,1,1,1])
 
         elif len(generadora) != 0:
             self.matrizGeneradora = np.zeros(4)
 
-    def distanciaMinimaHamming(self):
-        return self.distanciaMinimaHamming_usandoDiccionario()
+######################################################################################
 
-    # Distancia minima de hamming de un codigo C:
-    # Distancia minima entre dos palabras de un código
-    # Se recorre el diccionario completo comparando todas las palabras
-    def distanciaMinimaHamming_usandoDiccionario(self):
-        minimo = 100
-        i = -1
-        for palabra1 in self.diccionario:
-            i += 1
-            j = -1
-            for palabra2 in self.diccionario:
-                j += 1
-                if i>=j:
-                    continue
-                distancia = fc.distanciaHamming(palabra1,palabra2)
-                if minimo > distancia:
-                    minimo = distancia
-        self.distancia = minimo
+    def setLongitud(self):
+        self.longitud = fc.longitudDesdeGeneradora(self.matrizGeneradora)
+
+    def setDimension(self):
+        self.dimension = fc.dimensionDesdeGeneradora(self.matrizGeneradora)
+
+    def setDistanciaMinimaHamming(self):
+        self.distancia = fc.distanciaMinimaHammingDesdeDiccionario(self.diccionario)
 
     def pesoHammingCodigo(self):
-        return 3
+        print("Peso hamming: ", fc.pesoHammingCodigo(diccionario))
 
     def codificar(self, palabra):
-        codificada = np.dot(np.array(palabra), self.matrizGeneradora)
-        codificada = codificada % self.clase
-        codificada = codificada.tolist()[0]
+        codificada = fc.codificar(palabra, self.matrizGeneradora, self.clase)
         return codificada
 
-    def numeroPalabras(self):
-        self.M = self.clase**self.dimension
+    def setNumeroPalabras(self):
+        self.M = fc.numeroPalabras(self.clase, self.dimension)
 
-    def tasaInformacion(self):
-        self.R = self.dimension/float(self.longitud)
+    def setTasaInformacion(self):
+        self.R = fc.tasaInformacion(self.dimension, self.longitud)
 
-    def distanciaRelativa(self):
-        self.g = self.distancia/float(self.longitud)
+    def setDistanciaRelativa(self):
+        self.g = fc.distanciaRelativa(self.distancia,self.longitud)
 
-    def capacidadDeteccion(self):
-        self.s = self.distancia-1
+    def setCapacidadDeteccion(self):
+        self.s = fc.capacidadDeteccion(self.distancia)
 
-    def capacidadCorreccion(self):
-        self.t = (self.distancia-1)//2
+    def setCapacidadCorreccion(self):
+        self.t = fc.capacidadCorreccion(self.distancia)
 
-    def cotaSingleton(self):
-        # distancia <= longitud-dimension + 1
-        # distancia + dimension <= longitud + 1
-        if self.distancia <= (self.longitud-self.dimension+1):
-            self.MDS = True
-        else:
-            self.MDS = False
+    def setCotaSingleton(self):
+        self.MDS = fc.cotaSingleton(self.longitud, self.dimension, self.distancia)
 
-    #Una vez tenemos definida la matriz generadora sistematica, podemos obtener la matriz de control
-    def calcularMatrizControl(self):
-        #como la matriz es sistematica descartamos la identidad que debería estar a la izquierda
-        A = self.matrizGeneradora[:,self.dimension:]
-        Id = np.identity(self.longitud-self.dimension) # puesto que necesitamos una matriz Id de n-k
-        self.matrizControl = np.bmat([[A],[Id]])
+    def setMatrizControl(self):
+        self.matrizControl = fc.calcularMatrizControl(self.matrizGeneradora, self.longitud, self.dimension)
 
-    #Una vez tenemos definida la matriz de control sistematica, podemos obtener la matriz generadora
-    def calcularMatrizGeneradora(self):
-        #como la matriz es sistematica descartamos la identidad que debería estar debajo
-        A = self.matrizControl[:self.longitud-(self.longitud-self.dimension),:]
-        Id = np.identity(self.dimension)
-        self.matrizGeneradora = np.bmat([Id,A])
+    def setMatrizGeneradora(self):
+        self.matrizGeneradora = fc.calcularMatrizGeneradora(self.matrizControl, self.longitud, self.dimension)
+
+    def diagonalizacionManualGeneradora(self):
+        self.matrizGeneradora = AlgebraLineal.diagonalizacionManual(self.matrizGeneradora, self.dimension, self.clase)
 
     def calcularDistanciaMinimaDesdeControl(self):
-        return 3
+        self.distancia = fc.calcularDistanciaMinimaDesdeControl()
 
-    # se obtiene el diccionario con las palabras
-    def calcularTodasPalabras(self):
-        combinaciones = map(list, itertools.product(range(self.clase), repeat=self.dimension))
-        #print(lst) #nos da todas las posibles combinaciones
-        #si vamos multiplicando codificamos estas palabras:
-        for palabra in combinaciones:
-            codificada = self.codificar(palabra)
-            self.diccionario.append(codificada)
-            key = ''.join(str(e) for e in palabra)
-            value = ''.join(str(e) for e in codificada)
-            self.diccionario_CoDec.update({key:value})
+    def setDiccionario(self):
+        (self.diccionario, self.diccionario_CoDec) = fc.calcularTodasPalabras(self.clase, self.dimension, self.matrizGeneradora)
 
-    #se imprime el diccionario ordenado
     def imprimirDiccionario(self):
-        for decodificada, codificada in self.diccionario_CoDec.items():
-            print(decodificada+" => " + codificada)
+        print("\n\tTabla palabras:")
+        print("Decodificada => Codificada")
+        fc.imprimirDiccionario(self.diccionario_CoDec)
 
-    def calcularSindrome(self, vector):
-        return vector*self.matrizControl
+    def calcularSindrome(self, palabra):
+        return fc.calcularSindrome(palabra, self.matrizControl, self.clase)
 
-    def decodificacionSindromes(self):
-        return 3
+    def decodificacionSindromes(self, palabra):
+        self.calcularTablaSindromes()
+        return fc.decodificacionSindromes(palabra, self.tablaSindromes, self.matrizControl, self.clase)
 
     def calcularTablaSindromes(self):
-        return 3
+        self.tablaSindromes = fc.calcularTablaSindromes(self.t, self.matrizControl, self.clase)
+
+    def imprimirTablaSindromes(self):
+        print("\n\tTabla sindromes:")
+        print("Sindrome => Error")
+        fc.imprimirDiccionario(self.tablaSindromes)
+
+    def imprimirInformacionCodigo(self, G=False, H=False, dic=False, sin=False):
+        print("\n###########################")
+        print("Codigo " + self.nombre + ': ')
+        print("###########################")
+
+        if G:
+            print("\nMatriz generadora: ")
+            print(self.matrizGeneradora)
+            print("")
+
+        if H:
+            print("\nMatriz Control: ")
+            print(self.matrizControl)
+            print("")
+
+        print("\nInformacion: ")
+        print("[%d, %d, %d]" % (self.longitud, self.dimension, self.distancia))
+        print("Numero de palabras: %d" % (self.M))
+        print("Tasa informacion: %.2f%%" % (self.R))
+        print("distancia relativa: %.2f%%" % (self.g))
+        print("capacidad de deteccion: %d" % (self.s))
+        print("capacidad de correccion: %d" % (self.t))
+        print("Es MDS: " + str(self.MDS))
+
+        if dic:
+            print(self.imprimirDiccionario())
+            print("")
+
+        if sin:
+            print(self.imprimirTablaSindromes())
+            print("")
 
     def perforar(self, arrayPosiciones):
         return 3
@@ -174,12 +186,8 @@ class Codigo:
     def probabilidadError(self):
         return 3
 
-    def pesoHammingVector(self,palabra):
-        peso = 0
-        for i in range(len(palabra)):
-            if palabra[i] != 0:
-                peso += 1
-        return peso
-
     def teoremaShanon(self):
         return 3
+
+    def esCodigoLineal(self):
+        print(fc.esCodigoLineal(self.diccionario, self.matrizControl, self.clase))
