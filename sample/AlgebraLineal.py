@@ -3,6 +3,7 @@
 #Biblioteca para el manejo de matrices
 import numpy as np
 import itertools
+import re
 
 def obtenerParametricas( parametricas, clase=2):
     vectores = []
@@ -33,9 +34,14 @@ def obtenerParametricas( parametricas, clase=2):
 def eliminarVectoresProporcionales(vectores, clase=2):
     # 2. se quitan vectores proporcionales
     # por ejemplo en: [[1 1 0 0 0 0],[0 0 1 0 1 0], [1 1 0 0 0 0]
-    vectorIndex = 0
+    vectorIndex = -1
     arrayPosicionesProporcionales = []
     for vector in vectores:
+        vectorIndex += 1
+        if sum(vector) == 0:
+            arrayPosicionesProporcionales.append(vectorIndex)#si es el vector nulo
+            continue
+
         #comparamos uno a uno los vectores
         vectorCompararIndex = -1
         for vectorComparar in vectores:
@@ -67,7 +73,7 @@ def eliminarVectoresProporcionales(vectores, clase=2):
 
             if proporcionales: #si son proporcionales el segundo desaparece
                 arrayPosicionesProporcionales.append(vectorCompararIndex)
-        vectorIndex += 1
+
     for i in arrayPosicionesProporcionales[::-1]:
         vectores.pop(i)
 
@@ -81,24 +87,49 @@ def obtenerDimensionParametricas(parametricas):
 def obtenerLongitudParametricas(parametricas):
     return len(parametricas)-1
 
-def diagonalizacionManual(matriz, dimension, clase):
-    final = np.identity(dimension)
-    if (not np.array_equal(matriz[:,:dimension], final)):
-        print("La matriz no es sistemática, requiere de manipulación manual para obtener la identidad a la izquierda:")
-        print("Respetar los espacios.")
-        
-    while not np.array_equal(matriz[:,:dimension], final):
+#tipoMatriz: 'generadora' o 'control'
+def diagonalizacionManual(matriz, dimension, longitud, clase, nombre, tipoMatriz):
+
+    if tipoMatriz == 'generadora':
+        final = np.identity(dimension)
+        parteSistematica = lambda matriz : matriz[:,:dimension]
+    elif tipoMatriz == 'control':
+        final = np.identity(longitud-dimension)
+        parteSistematica = lambda matriz : matriz[longitud-(longitud-dimension):,:]
+    else:
+        print("Error Diagonalización manual")
+        return matriz
+
+    if (not np.array_equal(parteSistematica(matriz), final)):
+        print("\nLa matriz "+tipoMatriz+" del codigo: "+nombre+" no es sistemática, requiere de manipulación manual para obtener la identidad a la izquierda:")
+        print("Respetar los espacios. x para terminar.\n")
+
+    while not np.array_equal(parteSistematica(matriz), final):
         print(matriz)
-        print("Introduce una operacion: ")
+        print("\nIntroduce una operacion: ")
         print(" - suma: f1 = f1 -2 f2")
-        print(" - intercambio: f1 = f2")
+        print(" - intercambio filas: f1 = f2")
+        print(" - intercambio columnas: c1 = c2")
         entrada = raw_input("->")
 
-        destino = int((entrada.split(" = "))[0].split("f")[1]) -1
+        if entrada == 'x':
+            return matriz % clase
+
+        patron = re.compile("(f\d = f\d [-|+|]\d* f\d|f\d = f\d$|c\d = c\d$)")
+        if not patron.match(entrada):
+            print("\n\n!!!!\nOperación incorrecta, respete los espacios.\n")
+            continue
+
 
         if entrada.count('f')==2: #intercambio
+            destino = int((entrada.split(" = "))[0].split("f")[1]) -1
             intercambio = int((entrada.split(" = "))[1].split("f")[1]) -1
-            matriz = intercambiaFilas(matriz,destino,intercambio)
+            matriz = intercambiaFilas(matriz, destino, intercambio)
+
+        if entrada.count('c')==2: #intercambio columnas
+            destino = int((entrada.split(" = "))[0].split("c")[1]) -1
+            intercambio = int((entrada.split(" = "))[1].split("c")[1]) -1
+            matriz = intercambiaColumnas(matriz, destino, intercambio)
 
         if entrada.count('f')>2: #suma
             if entrada.split(" ")[3] == '-':
@@ -109,28 +140,26 @@ def diagonalizacionManual(matriz, dimension, clase):
                 operacion =  int(entrada.split(" ")[3])
             primero = int(entrada.split(" ")[2].split("f")[1]) -1
             segundo = int(entrada.split(" ")[4].split("f")[1]) -1
-            matriz = sumaFilas(matriz,operacion,primero,segundo)
+            matriz = sumaFilas(matriz, operacion, primero, segundo)
 
     return matriz % clase
 
 #https://www.math.ubc.ca/~pwalls/math-python/linear-algebra/solving-linear-systems/
-def intercambiaFilas(matriz,i,j):
-    n = matriz.shape[0]
-    E = np.eye(n)
-    E[i,i] = 0
-    E[j,j] = 0
-    E[i,j] = 1
-    E[j,i] = 1
-    return E*matriz
+def intercambiaFilas(matriz, i, j):
+    matriz[[i,j]] = matriz[[j,i]]
+    return matriz
 
-def sumaFilas(matriz,k,i,j):
-    n = matriz.shape[0]
-    E = np.eye(n)
-    if i == j:
-        E[i,i] = k + 1
-    else:
-        E[i,j] = k
-    return E * matriz
+def intercambiaColumnas(matriz, i, j):
+    matriz=matriz.T
+    matriz[[i,j]] = matriz[[j,i]]
+    return matriz.T
+
+def sumaFilas(matriz, k, i, j):
+    fila = matriz[[i]]
+    sumando = matriz[[j]]
+    fila = (fila + (sumando*k)) % 2
+    matriz[[i]] = fila
+    return matriz
 
 
 #https://github.com/cryptogoth/skc-python/blob/master/skc/diagonalize.py

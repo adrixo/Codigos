@@ -4,13 +4,20 @@
 import numpy as np
 import itertools
 import AlgebraLineal
+from math import factorial, log
 
 def longitudDesdeGeneradora(matrizGeneradora):
     return matrizGeneradora.shape[1] #el numero de columnas es la longitud
 
 def dimensionDesdeGeneradora(matrizGeneradora):
-    return np.linalg.matrix_rank(matrizGeneradora) #coincide con el numero filas
+    return np.linalg.matrix_rank(matrizGeneradora) #que tambien coincide con el numero filas
 
+def longitudDesdeControl(matrizControl):
+    return matrizControl.shape[0] #el numero de filas es la longitud
+
+def dimensionDesdeControl(matrizControl):
+    # n-k = numero columnas H
+    return matrizControl.shape[0] - matrizControl.shape[1]
 
 
 #def
@@ -38,6 +45,36 @@ def distanciaMinimaHammingDesdeDiccionario(diccionario):
             if minimaDistancia > distancia:
                 minimaDistancia = distancia
     return minimaDistancia
+
+# La distancia minima de un codigo lineal C coincide con el minimo n de filas lin. dependientes de una matriz de control
+def distanciaMinimaHammingDesdeControl(matrizControl, longitud, clase):
+    filas = list(np.array(matrizControl))
+    nCombinaciones = 1
+    nFila = 0 #fila a evaluar que es combiancion de otros nCombinaciones filas
+    while nCombinaciones < longitud - 1:
+        # tomamos la fila
+        fila = filas[nFila]
+        # y probamos a ver si se puede obtener como combinacion de las demas
+        filasAux = filas[:]
+        filasAux.pop(nFila)
+
+        combianciones = itertools.combinations(filasAux, nCombinaciones)
+        for c in combianciones:
+            filaAux = [0 for x in range(len(fila))]
+            for i in range(len(c)): #por cada fila en la combinacion
+                for j in range(len(filaAux)): #por cada letra en la fila
+                    filaAux[j] = (filaAux[j] + c[i][j]) % clase
+            #Si la combinacion da resultado a la fila hemos terminado y la distancia es nCombinaciones + 1
+            fin = True
+
+            for i in range(len(fila)):
+                if fila[i] != filaAux[i]:
+                    fin = False
+            if fin:
+                return nCombinaciones + 1
+
+        nCombinaciones += 1
+    return nCombinaciones + 1
 
 #Dado un diccionario se calcula cual es mas cerca cero
 def pesoHammingCodigo(diccionario):
@@ -73,8 +110,7 @@ def capacidadCorreccion(distancia):
 #MDS es
 def cotaSingleton(longitud, dimension, distancia):
     # distancia <= longitud-dimension + 1
-    # distancia + dimension <= longitud + 1
-    if distancia <= (longitud-dimension+1):
+    if distancia  >= (longitud-dimension+1):
         return True
     else:
         return False
@@ -84,14 +120,14 @@ def calcularMatrizControl(matrizGeneradora, longitud, dimension):
     #como la matriz es sistematica descartamos la identidad que debería estar a la izquierda
     A = matrizGeneradora[:,dimension:]
     Id = np.identity(longitud - dimension) # puesto que necesitamos una matriz Id de n-k
-    return np.bmat([[A],[Id]])
+    return np.bmat([[A],[Id]]).astype(int)
 
 #Una vez tenemos definida la matriz de control sistematica, podemos obtener la matriz generadora
 def calcularMatrizGeneradora(matrizControl, longitud, dimension):
     #como la matriz es sistematica descartamos la identidad que debería estar debajo
     A = matrizControl[:longitud-(longitud-dimension),:]
     Id = np.identity(dimension)
-    return np.bmat([Id,A])
+    return np.bmat([Id,A]).astype(int)
 
 def calcularDistanciaMinimaDesdeControl():
     return 3
@@ -157,18 +193,16 @@ def decodificacionSindromes(palabra, tablaSindromes, matrizControl, clase):
             palabra[i] = (palabra[i] + error[i]) % clase
         print("La palabra contenia el error " + ''.join(str(s) for s in error) + " y ha sido decodificada como " + ''.join(str(s) for s in palabra))
 
+# nCombinaciones: Puede ser deteccion, correccion
+def probabilidadTransmision(probabilidadError, longitud, nCombinaciones, paquetesEnviados=1):
+    #https://es.wikipedia.org/wiki/Combinatoria
+    def combinatorial(m, n):
+        return factorial(m) // (factorial(n) * factorial(m - n))
 
-def perforar( arrayPosiciones):
-    return 3
-
-def acortar( arrayPosiciones):
-    return 3
-
-def extender():
-    return 3
-
-def probabilidadError():
-    return 3
+    total = 0
+    for i in range(0,nCombinaciones):
+        total += combinatorial(longitud,i)*(probabilidadError**i)*(1-probabilidadError)**(longitud-i)
+    return total**paquetesEnviados
 
 def pesoHammingVector(palabra):
     peso = 0
@@ -184,8 +218,20 @@ def distanciaHamming(palabra1,palabra2):
             distancia += 1
     return distancia
 
-def teoremaShanon(self):
-    return 3
+#capacidadDelCanal
+def teoremaShanon(probabilidadError):
+    capacidadDelCanal = 1 + probabilidadError*log(probabilidadError,2) + (1-probabilidadError)*log(1-probabilidadError,2)
+    return capacidadDelCanal
+
+def redundanciaMinimaShanon(probabilidadError, bitsTransmitir):
+    dimension = bitsTransmitir
+    longitud = bitsTransmitir
+    capacidadDelCanal = teoremaShanon(probabilidadError)
+    while dimension/float(longitud) > capacidadDelCanal:
+        longitud += 1
+
+    print("Para transmitir %d bits de informacion por un canal binario con probabilidad de error: %f y capacidad: %f necesitamos al menos %d bits de redundancia: %d/%d = %f" % (bitsTransmitir, probabilidadError, capacidadDelCanal, longitud - dimension, dimension, longitud, dimension/float(longitud)) )
+    return longitud - dimension
 
 #https://es.wikipedia.org/wiki/Subespacio_vectorial
 # En álgebra lineal, un subespacio vectorial es el subconjunto de un espacio vectorial, que satisface por sí mismo la definición de espacio vectorial con las mismas operaciones que V.
