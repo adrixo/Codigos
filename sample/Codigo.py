@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
 
-#Biblioteca para el manejo de matrices
 import numpy as np
 import itertools
 import AlgebraLineal
 import FuncionesCodigos as fc
 
 class Codigo:
-    clase = 2 #mod 2
+    # Genera codigos con matriz generadora, matriz de control y sus caracteristicas asociadas
+    # Para ver como funciona mirar los programas de ejemplo
+    # La mayor parte de las funciones y explicaciones que utiliza se encuentran definidas en FuncionesCodigos.py
+    #
+    # Ejemplo creacion codigo: Codigo(2, generadora='Paridad_Generadora.txt', nombre="Paridad")
+    #
+    
+    clase = 2 #mod 2 ó tambien entendido como alfabeto
 
     nombre = ''
 
@@ -16,18 +22,21 @@ class Codigo:
     dimension = 0
     distancia = 0
 
+    # Matriz asociada al codigo que codifica palabras de longitud k
     matrizGeneradora = []
-    #rango maximo k
+
+    # Matriz de control que es capaz de determinar si una palabra pertenece al codigo
     matrizControl = None
-    #n-k columnas
+
+    # diccionario con los posibles sindromes detectables y su error asociado
     tablaSindromes = []
 
+    #Numero de palabras
+    M = 0
     #todas las palabras
     diccionario = []
     #Diccionario con decodificada/codificada
     diccionario_CoDec = {}
-    #Numero de palabras
-    M = 0
 
     #Tasa información
     R=0
@@ -40,17 +49,23 @@ class Codigo:
     #cota singleton
     MDS = False
 
-    probabilidadErrorDeCanal = 0.000001
+    probabilidadErrorDeCanal = 0.001
 
+    #
+    # Constructor
+    #
     # Formas de dar un código:
     # 1. Ecuaciones parametricas
     # 2. Matriz generadora
     # 3. Matriz de control
-    def __init__(self, clase, parametricas=[], generadora=[], control=[], nombre='Sin nombre', probabilidadErrorDeCanal=0.000001):
+    #
+    # Se debe pasar una de las formas de construir el codigo, el nombre y si se quiere la probabilidad de error
+    def __init__(self, clase, parametricas=[], generadora=[], control=[], nombre='Sin nombre', probabilidadErrorDeCanal=0.001):
         self.clase = clase
         self.nombre = nombre
         self.probabilidadErrorDeCanal = probabilidadErrorDeCanal
 
+        # 1. Se obtienen las matrices generadora y de control
         if len(parametricas) != 0: #si hay ecuaciones parametricas
             arrayParametricas = np.array(AlgebraLineal.obtenerParametricas(parametricas,self.clase))
             self.matrizGeneradora = np.bmat(arrayParametricas)
@@ -81,6 +96,7 @@ class Codigo:
             print("Falta un parametro para definir el codigo.")
             return None
 
+        # 2. Se establecen los demas parametros a partir de las matrices asociadas al codigo
         self.setPrarametros()
 
 ######################################################################################
@@ -124,6 +140,8 @@ class Codigo:
             #En caso de que queramos calcular los sindromes
             self.calcularTablaSindromes()
 
+    # Definicion: Dado un codigo C la distancia minima de c es la menor distancia de hamming entre dos palabras del codigo
+    # Esta distancia se puede calcular desde el diccionario o desde la matriz de control
     def setDistanciaMinimaHamming(self):
         if len(self.diccionario) != 0:
             self.distancia = fc.distanciaMinimaHammingDesdeDiccionario(self.diccionario)
@@ -132,8 +150,9 @@ class Codigo:
         else:
             self.distancia = 99999
 
+    # Definicion: Dad un codigo C la distancia minima de c es la menor distancia de hamming entre dos palabras del codigo
     def pesoHammingCodigo(self):
-        print("Peso hamming: ", fc.pesoHammingCodigo(diccionario))
+        return fc.pesoHammingCodigo(self.diccionario)
 
     def codificar(self, palabra):
         codificada = fc.codificar(palabra, self.matrizGeneradora, self.clase)
@@ -163,6 +182,7 @@ class Codigo:
     def setMatrizGeneradora(self):
         self.matrizGeneradora = fc.calcularMatrizGeneradora(self.matrizControl, self.longitud, self.dimension)
 
+    # Diagonaliza de forma manual la matriz generadora o de control para obtener la sistematica
     def diagonalizacionManual(self, tipoMatriz):
         if tipoMatriz == 'generadora':
             self.matrizGeneradora = AlgebraLineal.diagonalizacionManual(self.matrizGeneradora, self.dimension, self.longitud, self.clase, self.nombre, tipoMatriz)
@@ -177,6 +197,7 @@ class Codigo:
     def setDiccionario(self):
         (self.diccionario, self.diccionario_CoDec) = fc.calcularTodasPalabras(self.clase, self.dimension, self.matrizGeneradora)
 
+    # imprime el diccionario de palabra->palabra codificada
     def imprimirDiccionario(self):
         print("\n\tTabla palabras:")
         print("Decodificada => Codificada")
@@ -185,6 +206,7 @@ class Codigo:
     def calcularSindrome(self, palabra):
         return fc.calcularSindrome(palabra, self.matrizControl, self.clase)
 
+    # Devuelve la palabra corregida tras aplicar el algoritmo de decodificacion por sindromes
     def decodificacionSindromes(self, palabra):
         self.calcularTablaSindromes()
         return fc.decodificacionSindromes(palabra, self.tablaSindromes, self.matrizControl, self.clase)
@@ -192,11 +214,13 @@ class Codigo:
     def calcularTablaSindromes(self):
         self.tablaSindromes = fc.calcularTablaSindromes(self.t, self.matrizControl, self.clase)
 
+    # imprime el diccionario de sindromes sindrome->error
     def imprimirTablaSindromes(self):
         print("\n\tTabla sindromes:")
         print("Sindrome => Error")
         fc.imprimirDiccionario(self.tablaSindromes)
 
+    # Imprime la informacion asociada al codigo que se indique
     def imprimirInformacionCodigo(self, Info=True, G=False, H=False, dic=False, sin=False):
         print("\n###########################")
         print("Codigo " + self.nombre + ': ')
@@ -228,6 +252,14 @@ class Codigo:
 
         print("\n####### Fin " + self.nombre + " #########\n")
 
+    # Definicion: Dado un codigo c y una lista s de hasta [1..n] elementos el codigo perforado
+    # de c en s es el que se obtiene suprimiendo las posiciones s en c
+    # La funcion perfora al codigo actual eliminando de la matriz generadora las posiciones indicadas
+    # Posteriormente vuelve a calcular la informacion del codigo
+    # Si se desea imprime los cambios en las propiedades del codigo
+    # input: arrayPosiciones (lista)
+    #        verbose=True (Si se indica imprimira los cambios en las propiedades)
+    # output: el codigo entero se modifica
     def perforar(self, arrayPosiciones, verbose=False):
         if verbose:
             print("Perforando el codigo generado por: ")
@@ -275,9 +307,18 @@ class Codigo:
             print("Tasa informacion: %.2f%%->%.2f%%" % (RAnterior,self.R))
             print("distancia relativa: %.2f%%->%.2f%%" % (gAnterior, self.g))
             print("")
+    ##### Fin perforar #####
 
-
-# Se obtiene cogiendo todas las palabras que tienen 0s en las posiciones dadas, la matriz generadora seria los
+    # Definicion: Dado un codigo c y una lista s de hasta [1..n] elementos el codigo acortado
+    # de c en s se constituye como el conjunto de palabras del codigo con 0s en las posiciones de s
+    # estas son perforadas por esa posicion.
+    # La funcion perfora las palabras que tienen 0s en la posiciones indicadas
+    # y obtiene la matriz generadora a partir de esta.
+    # Posteriormente vuelve a calcular la informacion del codigo
+    # Si se desea imprime los cambios en las propiedades del codigo
+    # input: arrayPosiciones (lista)
+    #        verbose=True (Si se indica imprimira los cambios en las propiedades)
+    # output: el codigo entero se modifica
     def acortar(self, arrayPosiciones, verbose=True):
         if verbose:
             print("\nAcortando el codigo de palabras: ")
@@ -348,7 +389,15 @@ class Codigo:
             print("Tasa informacion: %.2f%%->%.2f%%" % (RAnterior,self.R))
             print("distancia relativa: %.2f%%->%.2f%%" % (gAnterior, self.g))
             print("")
+    ##### Fin Acortar #####
 
+    # Definicion: Dado un codigo c el codigo extendido por paridad se obtiene añadiendo a cada palabra
+    # un simbolo de paridad
+    # La funcion añade a la matriz generadora el simbolo de paridad
+    # Posteriormente vuelve a calcular la informacion del codigo
+    # Si se desea imprime los cambios en las propiedades del codigo
+    # input: verbose=True (Si se indica imprimira los cambios en las propiedades)
+    # output: el codigo entero se modifica
     def extender(self, verbose=True):
         if verbose:
             print("Extendiendo el codigo generado por: ")
@@ -388,17 +437,32 @@ class Codigo:
             print("Tasa informacion: %.2f%%->%.2f%%" % (RAnterior,self.R))
             print("distancia relativa: %.2f%%->%.2f%%" % (gAnterior, self.g))
             print("")
+    ##### Fin Perforar #####
 
-
-    def probabilidadTransmision(self, probabilidadError, tipo='correccion', nPaquetes=1):
+    # Devuelve la probabilidad de transmision del codigo por un canal de probabilidad de error definida para un cierto numero de paquetes
+    # Si se desea se imprime la probabilidad de transmision
+    def probabilidadTransmision(self, probabilidadError, tipo='correccion', nPaquetes=1, verbose=False):
         if tipo == 'correccion':
             nCombinaciones = self.t
         elif tipo == 'deteccion':
             nCombinaciones = self.s
         else:
-            nCombinaciones = 0
+            nCombinaciones = self.t
 
-        return fc.probabilidadTransmision(probabilidadError, self.longitud, nCombinaciones, paquetesEnviados=nPaquetes)
+        prob = fc.probabilidadTransmision(probabilidadError, self.longitud, nCombinaciones, paquetesEnviados=nPaquetes)
 
-    def esCodigoLineal(self):
-        print(fc.esCodigoLineal(self.diccionario, self.matrizControl, self.clase))
+        if verbose:
+            print("Si se transmite con %s %d paquete/s por un canal con error: %f la capacidad de %s es: %f" % (self.nombre, nPaquetes, probabilidadError, tipo, prob))
+
+        return prob
+
+    # definicion: Un codigo lineal es un subespacio vectorial
+    # cualesquiera dos palabras del codigo sumadas dan como resultado otra palabra de este
+    def esCodigoLineal(self, verbose=True):
+        lineal = fc.esCodigoLineal(self.diccionario, self.matrizControl, self.clase)
+        if verbose and lineal:
+            print("%s es un codigo lineal" % (self.nombre))
+        elif verbose:
+            print("%s no es un codigo lineal" % (self.nombre))
+
+        return lineal

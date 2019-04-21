@@ -5,6 +5,11 @@ import numpy as np
 import itertools
 import re
 
+# dadas unas ecuaciones parametricas podemos obtener los vectores de la matriz asociada sustituyendo las coordenadas con una base
+# input: parametricas (lista de listas):
+#          la primera lista se corresponde con las variables a tomar en cuenta
+#          las siguientes con las distintas ecuaciones parametricas de cada posicion
+# output: vectores asociados (lista de listas) (matriz generadora)
 def obtenerParametricas( parametricas, clase=2):
     vectores = []
     vectoresIndex = 0
@@ -30,7 +35,10 @@ def obtenerParametricas( parametricas, clase=2):
 
     return vectores
 
-
+# Un vector es proporcional si se puede obtener como combinacion lineal de otros
+# input: vectores(lista de listas)
+#        clase
+# output: vectores no proporcionales (lista de listas)
 def eliminarVectoresProporcionales(vectores, clase=2):
     # 2. se quitan vectores proporcionales
     # por ejemplo en: [[1 1 0 0 0 0],[0 0 1 0 1 0], [1 1 0 0 0 0]
@@ -87,7 +95,15 @@ def obtenerDimensionParametricas(parametricas):
 def obtenerLongitudParametricas(parametricas):
     return len(parametricas)-1
 
-#tipoMatriz: 'generadora' o 'control'
+# definicion: La matriz generadora que contiene las columnas de la matriz identidad de tamaño k*k se dice que es una matriz generadora sistematica
+# Esta funcion permite la manipulacion manual de la matriz
+# input: matriz (np.matriz)
+#        dimension del codigo
+#        longitud del codigo
+#        clase del codigo
+#        nombre (string para informar)
+#        tipoMatriz: 'generadora' o 'control'
+# output: matriz sistematica o matriz modificada si se presiona x
 def diagonalizacionManual(matriz, dimension, longitud, clase, nombre, tipoMatriz):
 
     if tipoMatriz == 'generadora':
@@ -145,15 +161,18 @@ def diagonalizacionManual(matriz, dimension, longitud, clase, nombre, tipoMatriz
     return matriz % clase
 
 #https://www.math.ubc.ca/~pwalls/math-python/linear-algebra/solving-linear-systems/
+# Intercambia las filas i y j de la matriz
 def intercambiaFilas(matriz, i, j):
     matriz[[i,j]] = matriz[[j,i]]
     return matriz
 
+# Intercambia las columnas i y j de la matriz
 def intercambiaColumnas(matriz, i, j):
     matriz=matriz.T
     matriz[[i,j]] = matriz[[j,i]]
     return matriz.T
 
+# suma a la fila i la fila j*k
 def sumaFilas(matriz, k, i, j):
     fila = matriz[[i]]
     sumando = matriz[[j]]

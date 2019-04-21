@@ -1,10 +1,14 @@
 #!/usr/bin/python
+# Programa para el testeo del objeto Codigo
+# Se generan 3 codigos diferentes y se imprimen sus caracteristicas
+
 from Codigo import *
 import Parametricas as p
 
+
 i = 'a'
 while i != 'x':
-    print("\nEste programa presenta los codigos de triple repeticion, triple control y paridad.")
+    print("\n\tEste programa presenta los codigos:\n\t - triple repeticion\n\t - triple control\n\t - paridad\n")
     print("Se pueden cargar desde: \n 1. Ecuaciones parametricas\n 2. Matrices Generadoras\n 3. Matrices de Control\n 4. Salir")
     try:
         i = str(input("-> "))
@@ -36,7 +40,8 @@ while i != 'x':
     codigos = [TR, TC, P]
 
     for c in codigos:
-        if c.M > 20:
+        if c.M > 17:
+            # En caso de haber muchas palabras no las imprimimos
             c.imprimirInformacionCodigo(G=True, H=True)
         else:
             c.imprimirInformacionCodigo(G=True, H=True, dic=True, sin=True)
