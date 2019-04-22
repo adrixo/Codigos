@@ -13,12 +13,12 @@ with open('LICENSE') as f:
 
 setup(
     name='Teoría de códigos',
-    version='0.1',
-    description='Puesta a prueba de los conocimeitnos ',
+    version='0.2',
+    description='Interfaz básica para instanciación y manejo de códigos',
     long_description=readme,
     author='Adrián Valera',
     author_email='adrianvalrom@gmail.com',
     url='https://github.com/adrixo/codigos',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
+    packages=find_packages()
 )

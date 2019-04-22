@@ -296,7 +296,11 @@ def decodificacionSindromes(palabra, tablaSindromes, matrizControl, clase):
             palabra[i] = (palabra[i] + error[i]) % clase
         print("La palabra contenia el error " + ''.join(str(s) for s in error) + " y ha sido decodificada como " + ''.join(str(s) for s in palabra))
 
-# nCombinaciones: Puede ser deteccion, correccion
+# Input: Probabilidad de error del canal binario
+#        longitud del mensaje a transmitir
+#        nCombinaciones: tasa a tener en cuneta (error o deteccion)
+#        paquetesEnviados: n Paquetes enviados de n longitud
+# output: Probabilidad de transmision correcta
 def probabilidadTransmision(probabilidadError, longitud, nCombinaciones, paquetesEnviados=1):
     #https://es.wikipedia.org/wiki/Combinatoria
     def combinatorial(m, n):
@@ -307,11 +311,13 @@ def probabilidadTransmision(probabilidadError, longitud, nCombinaciones, paquete
         total += combinatorial(longitud,i)*(probabilidadError**i)*(1-probabilidadError)**(longitud-i)
     return total**paquetesEnviados
 
-#capacidadDelCanal
+# Teorema: Para tdoo canal discreto existe una constante c(p) denominada capacidad del canal de modo que existen códigos con tasa de informacion arbitrariamente cercana (pero menor) a esa capacidad y tales que la probabilidad de recepccion correcta del mensaje es cercana a 1
+# La siguiente función devuelve esta tasa en el caso de los canales binarios
 def teoremaShanon(probabilidadError):
     capacidadDelCanal = 1 + probabilidadError*log(probabilidadError,2) + (1-probabilidadError)*log(1-probabilidadError,2)
     return capacidadDelCanal
 
+# Dada la probabilidad de error de un canal binario y los bits que se desean transmitir la función imprime y devuelve los bits de redundancia minimos que se necesitan
 def redundanciaMinimaShanon(probabilidadError, bitsTransmitir):
     dimension = bitsTransmitir
     longitud = bitsTransmitir
