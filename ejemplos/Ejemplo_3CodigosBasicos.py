@@ -2,8 +2,11 @@
 # Programa para el testeo del objeto Codigo
 # Se generan 3 codigos diferentes y se imprimen sus caracteristicas
 
-from Codigo import *
-import Parametricas as p
+import sys
+sys.path.append('../')
+
+from src.Codigo import *
+import src.Parametricas as p
 
 
 i = 'a'

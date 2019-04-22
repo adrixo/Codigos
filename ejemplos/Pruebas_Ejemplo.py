@@ -1,7 +1,10 @@
 #!/usr/bin/python
-from Codigo import *
-import FuncionesCodigos as fc
-import Parametricas as p
+import sys
+sys.path.append('../')
+
+from src.Codigo import *
+import src.FuncionesCodigos as fc
+import src.Parametricas as p
 
 #Programa de ejemplo para probar un codigo
 
@@ -17,7 +20,8 @@ codigo = Codigo(2, parametricas=p.triple_control, nombre="Triple control")
 codigo.imprimirInformacionCodigo(G=True, H=True, dic=True, sin=True)
 
 # 3. operaciones con el codigo
-codigo.esCodigoLineal(verbose=True)
+
+
 
 
 #################################
