@@ -19,11 +19,8 @@ A continuación se muestra la ejecución de ``ejemplos/Ejemplo_3CodigosBasicos.p
 
       ./ejemplo/Ejemplo_3CodigosBasicos.py
 
-.. |Imagen ejemplo| image:: img/Ejemplo_CodigosBasicos.png
-
-      :alt: Codigos de ejemplo
-      :width: 100%
-      :align: center
+.. image:: img/Ejemplo_CodigosBasicos.png
+   :width: 40pt
 
 Estructura del proyecto
 #######################
