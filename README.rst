@@ -19,11 +19,11 @@ A continuación se muestra la ejecución de ``ejemplos/Ejemplo_3CodigosBasicos.p
 
       ./ejemplo/Ejemplo_3CodigosBasicos.py
 
-.. class:: no-web
-      .. image:: ./img/Ejemplo_CodigosBasicos.png
-          :alt: Codigos de ejemplo
-          :width: 100%
-          :align: center
+.. image:: img/Ejemplo_CodigosBasicos.png
+
+      :alt: Codigos de ejemplo
+      :width: 100%
+      :align: center
 
 Estructura del proyecto
 #######################
@@ -69,5 +69,7 @@ Módulos usados:
 | Cuerpos.py            | Vacío                                               |
 +-----------------------+-----------------------------------------------------+
 
+Referencias
+-----------
 
 https://docs.scipy.org/doc/numpy/reference/
