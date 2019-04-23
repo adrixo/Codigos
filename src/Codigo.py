@@ -12,7 +12,7 @@ class Codigo:
     #
     # Ejemplo creacion codigo: Codigo(2, generadora='Paridad_Generadora.txt', nombre="Paridad")
     #
-    
+
     clase = 2 #mod 2 ó tambien entendido como alfabeto
 
     nombre = ''
@@ -97,7 +97,11 @@ class Codigo:
             return None
 
         # 2. Se establecen los demas parametros a partir de las matrices asociadas al codigo
-        self.setPrarametros()
+        if fc.numeroPalabras(self.clase, self.dimension) > 130:
+            # Para evitar malgasto tiempo
+            self.setPrarametros(palabras=False)
+        else:
+            self.setPrarametros()
 
 ######################################################################################
 

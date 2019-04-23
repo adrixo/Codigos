@@ -131,7 +131,7 @@ def diagonalizacionManual(matriz, dimension, longitud, clase, nombre, tipoMatriz
         if entrada == 'x':
             return matriz % clase
 
-        patron = re.compile("(f\d = f\d [-|+|]\d* f\d|f\d = f\d$|c\d = c\d$)")
+        patron = re.compile("(f\d+ = f\d+ [-|+|]\d+ f\d+|f\d+ = f\d+$|c\d+ = c\d+$)")
         if not patron.match(entrada):
             print("\n\n!!!!\nOperación incorrecta, respete los espacios.\n")
             continue
@@ -140,11 +140,17 @@ def diagonalizacionManual(matriz, dimension, longitud, clase, nombre, tipoMatriz
         if entrada.count('f')==2: #intercambio
             destino = int((entrada.split(" = "))[0].split("f")[1]) -1
             intercambio = int((entrada.split(" = "))[1].split("f")[1]) -1
+            if destino > matriz.shape[0]-1 or intercambio > matriz.shape[0]-1:
+                print("Fila no valida")
+                continue
             matriz = intercambiaFilas(matriz, destino, intercambio)
 
         if entrada.count('c')==2: #intercambio columnas
             destino = int((entrada.split(" = "))[0].split("c")[1]) -1
             intercambio = int((entrada.split(" = "))[1].split("c")[1]) -1
+            if destino > matriz.shape[1]-1 or intercambio > matriz.shape[1]-1:
+                print("Columna no valida")
+                continue
             matriz = intercambiaColumnas(matriz, destino, intercambio)
 
         if entrada.count('f')>2: #suma
@@ -156,6 +162,9 @@ def diagonalizacionManual(matriz, dimension, longitud, clase, nombre, tipoMatriz
                 operacion =  int(entrada.split(" ")[3])
             primero = int(entrada.split(" ")[2].split("f")[1]) -1
             segundo = int(entrada.split(" ")[4].split("f")[1]) -1
+            if primero > matriz.shape[0]-1 or segundo > matriz.shape[0]-1:
+                print("Fila no valida")
+                continue
             matriz = sumaFilas(matriz, operacion, primero, segundo)
 
     return matriz % clase
