@@ -75,7 +75,7 @@ class Codigo:
             self.setMatrizControl()
 
         elif len(generadora) != 0:
-            archivo = "../Matrices/"+generadora
+            archivo = "Matrices/"+generadora
             self.matrizGeneradora = np.bmat(np.loadtxt(archivo).astype(int))
             self.setLongitud('generadora')
             self.setDimension('generadora')
@@ -83,7 +83,7 @@ class Codigo:
             self.setMatrizControl()
 
         elif len(control) != 0:
-            archivo = "../Matrices/"+control
+            archivo = "Matrices/"+control
             self.matrizControl = np.bmat(np.loadtxt(archivo).astype(int))
             if self.matrizControl.shape[0] == 1:
                 self.matrizControl = self.matrizControl.T

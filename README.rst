@@ -17,7 +17,8 @@ A continuación se muestra la ejecución de ``ejemplos/Ejemplo_3CodigosBasicos.p
 
 .. code-block:: bash
 
-      ./ejemplo/Ejemplo_3CodigosBasicos.py
+      cd ejemplos
+      ./Ejemplo_3CodigosBasicos.py
 
 .. image:: img/Ejemplo_CodigosBasicos.png
    :width: 40pt

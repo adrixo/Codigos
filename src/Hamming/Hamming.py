@@ -11,8 +11,10 @@ class Hamming(Codigo):
     #Si se desea cargar de archivo para no tener que gestionar la matriz de control...
     def __init__(self, q, clase=2, nombre='Hamming sin nombre', desdeArchivo=False, probabilidadErrorDeCanal=0.001):
 
-        existeArchivo = True
+        if nombre == 'Hamming sin nombre':
+            nombre = 'Ham_'+str(clase)+"("+str(q)+")"
 
+        existeArchivo = True
         if desdeArchivo:
             archivo = "Hamming"+str(q)+"_Control.txt"
 
@@ -23,7 +25,7 @@ class Hamming(Codigo):
 
         if not desdeArchivo or not existeArchivo:
             Codigo.__init__(self, clase, nombre=nombre)
-            self.matrizControl = self.obtenerMatrizControlHamming(q)
+            self.matrizControl = self.obtenerMatrizControlHamming(q, clase=clase)
             self.setLongitud('control')
             self.setDimension('control')
             self.diagonalizacionManual('control')
