@@ -21,7 +21,6 @@ A continuación se muestra la ejecución de ``ejemplos/Ejemplo_3CodigosBasicos.p
       ./Ejemplo_3CodigosBasicos.py
 
 .. image:: img/Ejemplo_CodigosBasicos.png
-   :width: 40pt
 
 Estructura del proyecto
 #######################
